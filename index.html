@@ -19,6 +19,7 @@
     width: 1100px; max-height: 92vh;
     display: flex; flex-direction: column;
     box-shadow: 0 24px 80px rgba(0,0,0,0.3);
+    position: relative;
   }
   .modal-header {
     display: flex; justify-content: space-between; align-items: center;
@@ -210,94 +211,56 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   .loading-panel p { font-size: 13px; color: #999; }
 
-  /* 프리뷰 모드 */
-  .preview-panel {
-    flex: 1; padding: 20px 24px; overflow-y: auto;
-  }
-  .preview-header {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 16px;
-  }
-  .preview-label {
-    font-size: 14px; font-weight: 700; color: #333;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .preview-label .preview-icon {
-    width: 24px; height: 24px; background: #e8f1fd; border-radius: 6px;
-    display: inline-flex; align-items: center; justify-content: center;
-    font-size: 13px;
-  }
-  .preview-hint {
-    font-size: 12px; color: #999; font-weight: 400;
-  }
-
-  .preview-field {
-    margin-bottom: 14px;
-  }
-  .preview-field-label {
-    font-size: 12px; font-weight: 600; color: #888;
-    margin-bottom: 4px;
-  }
-  .preview-field-value {
-    font-size: 14px; color: #333; line-height: 1.5;
-    padding: 8px 12px; background: #f9fafb; border-radius: 6px;
-    border: 1px solid #eee;
-  }
-  .preview-field-value.editable {
-    background: #fff; border: 1.5px solid #4a9eff;
-    outline: none; cursor: text; min-height: 38px;
-  }
-  .preview-field-value.editable:focus {
-    box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.15);
-  }
-
-  .preview-sense-card {
-    background: #fff; border-radius: 8px;
-    padding: 14px 16px; margin-bottom: 10px;
-    border: 1.5px solid #eee;
-  }
-  .preview-sense-card.from-changed {
-    border-color: #ffc107; background: #fffef5;
-  }
-  .preview-sense-card.from-added {
-    border-color: #4caf50; background: #f5fdf5;
-  }
-  .preview-sense-card .change-source {
-    font-size: 11px; color: #888; margin-top: 6px;
-  }
-  .preview-sense-card .change-source span {
-    padding: 1px 6px; border-radius: 3px; font-weight: 600;
-  }
-  .preview-sense-card .change-source .src-changed { background: #fff3cd; color: #856404; }
-  .preview-sense-card .change-source .src-added { background: #d4edda; color: #155724; }
-
-  .preview-editable-def {
-    font-size: 14px; color: #333; line-height: 1.6;
-    padding: 6px 10px; border: 1.5px solid #e0e0e0; border-radius: 6px;
-    background: #fff; min-height: 32px; outline: none;
-    transition: border 0.15s;
-  }
-  .preview-editable-def:focus {
-    border-color: #4a9eff;
-    box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.12);
-  }
-  .preview-editable-example {
-    font-size: 13px; color: #555; line-height: 1.5;
-    padding: 4px 10px; border: 1.5px solid #e8e8e8; border-radius: 5px;
-    background: #fff; min-height: 28px; outline: none; margin-top: 4px;
-    transition: border 0.15s;
-  }
-  .preview-editable-example:focus {
-    border-color: #4a9eff;
-    box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.12);
-  }
-
-  .arrow-divider {
+  /* 컨펌 모달 오버레이 */
+  .confirm-overlay {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
     display: flex; align-items: center; justify-content: center;
-    width: 48px; flex-shrink: 0; color: #ccc; font-size: 24px;
-    border-left: 1px solid #eef0f3; border-right: 1px solid #eef0f3;
-    background: #f8f9fb;
+    border-radius: 14px;
+    z-index: 10;
   }
+  .confirm-modal {
+    background: #fff;
+    width: 440px;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    padding: 32px 28px 24px;
+    text-align: center;
+    animation: confirmIn 0.25s ease;
+  }
+  @keyframes confirmIn {
+    from { opacity: 0; transform: scale(0.92) translateY(8px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .confirm-icon {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: #fff3e0;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 28px; margin-bottom: 16px;
+  }
+  .confirm-title {
+    font-size: 18px; font-weight: 700; color: #333;
+    margin-bottom: 12px;
+  }
+  .confirm-desc {
+    font-size: 14px; color: #666; line-height: 1.7;
+    margin-bottom: 24px;
+  }
+  .confirm-actions {
+    display: flex; gap: 10px; justify-content: center;
+  }
+  .confirm-btn {
+    padding: 10px 28px; border-radius: 8px; font-size: 14px;
+    font-weight: 600; cursor: pointer; border: none; transition: all 0.15s;
+  }
+  .confirm-btn-cancel {
+    background: #f0f0f0; color: #666;
+  }
+  .confirm-btn-cancel:hover { background: #e0e0e0; }
+  .confirm-btn-apply {
+    background: #ff9800; color: #fff;
+  }
+  .confirm-btn-apply:hover { background: #e88a00; }
 </style>
 </head>
 <body>
@@ -311,13 +274,10 @@
     <span class="step-num">2</span>수동 검색
   </button>
   <button class="scenario-tab" onclick="showStep(3)">
-    <span class="step-num">3</span>변경 프리뷰
+    <span class="step-num">3</span>컨펌 모달
   </button>
   <button class="scenario-tab" onclick="showStep(4)">
-    <span class="step-num">4</span>프리뷰 수정
-  </button>
-  <button class="scenario-tab" onclick="showStep(5)">
-    <span class="step-num">5</span>반영 완료
+    <span class="step-num">4</span>반영 완료
   </button>
 </div>
 
@@ -342,19 +302,6 @@ function localPanel() {
         <div class="sense-examples">
           <div class="sense-example">예 이 소설은 <em>대체</em>로 사랑 이야기입니다.</div>
         </div>
-      </div>
-    </div>`;
-}
-
-function apiPanelLoading() {
-  return `
-    <div class="compare-panel">
-      <div class="panel-header">
-        <div class="panel-label api"><span class="label-icon">📘</span> 한국어기초사전</div>
-      </div>
-      <div class="loading-panel">
-        <div class="spinner"></div>
-        <p>"대체²" 검색 중...</p>
       </div>
     </div>`;
 }
@@ -463,170 +410,73 @@ function step2() {
     </div>`;
 }
 
-// 스텝 3: 변경 프리뷰 (편집 가능)
+// 스텝 3: 컨펌 모달 (비교 화면 위에 오버레이)
 function step3() {
   return `
     <div class="modal-header">
-      <h2>변경사항 프리뷰</h2>
+      <h2>한국어기초사전 데이터 비교</h2>
       <button class="modal-close">✕</button>
     </div>
-    <div class="compare-body">
-      <div class="compare-panel left">
+    <div class="compare-body" style="filter: blur(1px); opacity: 0.6;">
+      ${localPanel()}
+      <div class="compare-panel">
         <div class="panel-header">
-          <div class="panel-label local"><span class="label-icon">📂</span> 현재 데이터</div>
+          <div class="panel-label api"><span class="label-icon">📘</span> 한국어기초사전</div>
+          <div class="api-search">
+            <input type="text" value="대체" readonly>
+            <select><option>대체² (명사)</option></select>
+            <button class="search-btn-sm">검색</button>
+          </div>
         </div>
         <div class="field-group">
           <div class="field-row"><span class="field-label">어휘</span><span class="field-value" style="font-weight:600;">대체</span></div>
           <div class="field-row"><span class="field-label">어깨숫자</span><span class="field-value">2</span></div>
-          <div class="field-row"><span class="field-label">분류</span><span class="field-value">일반 어휘</span></div>
+          <div class="field-row"><span class="field-label">품사</span><span class="field-value">명사</span></div>
         </div>
         <div class="divider"></div>
-        <div class="sense-card">
-          <div class="sense-header"><span class="sense-num">뜻 1</span></div>
-          <div class="sense-def" style="text-decoration: line-through; color: #c0392b;">다른 많은 것을 다 빼고 요점만 말하면.</div>
-          <div class="sense-examples">
-            <div class="sense-example">예 이 소설은 <em>대체</em>로 사랑 이야기입니다.</div>
-          </div>
-        </div>
-        <div style="padding: 16px 0; text-align: center; color: #ccc; font-size: 13px;">
-          뜻 2 없음
-        </div>
-      </div>
-
-      <div class="arrow-divider">→</div>
-
-      <div class="preview-panel">
-        <div class="preview-header">
-          <div class="preview-label">
-            <span class="preview-icon">✏️</span> 반영될 데이터
-          </div>
-          <span class="preview-hint">클릭하여 직접 수정할 수 있습니다</span>
-        </div>
-        <div class="field-group">
-          <div class="field-row"><span class="field-label">어휘</span><span class="field-value" style="font-weight:600;">대체</span></div>
-          <div class="field-row"><span class="field-label">어깨숫자</span><span class="field-value">2</span></div>
-          <div class="field-row"><span class="field-label">분류</span><span class="field-value">일반 어휘</span></div>
-        </div>
-        <div class="divider"></div>
-
-        <div class="preview-sense-card from-changed">
+        <div class="sense-card diff-changed">
           <div class="sense-header">
             <span class="sense-num">뜻 1</span>
-            <span class="diff-badge changed">변경</span>
+            <span class="diff-badge changed">내용 변경</span>
           </div>
-          <div class="preview-editable-def" contenteditable="true">다른 것이나 다른 사람으로 대신함.</div>
-          <div class="sense-examples" style="margin-top: 8px;">
-            <div class="preview-editable-example" contenteditable="true">예 이 소설은 대체로 사랑 이야기입니다.</div>
-            <div class="preview-editable-example" contenteditable="true">예 수업 시간에 선생님의 대체 교사가 왔다.</div>
-          </div>
-          <div class="change-source">출처: <span class="src-changed">한국어기초사전 뜻 1</span></div>
+          <div class="sense-def">다른 것이나 다른 사람으로 대신함.</div>
         </div>
-
-        <div class="preview-sense-card from-added">
+        <div class="sense-card diff-added">
           <div class="sense-header">
             <span class="sense-num">뜻 2</span>
-            <span class="diff-badge added">추가</span>
+            <span class="diff-badge added">신규</span>
           </div>
-          <div class="preview-editable-def" contenteditable="true">어떤 대상의 자리에 다른 대상이 들어감.</div>
-          <div class="sense-examples" style="margin-top: 8px;">
-            <div class="preview-editable-example" contenteditable="true">예 석유를 대체할 에너지원을 찾아야 한다.</div>
-          </div>
-          <div class="change-source">출처: <span class="src-added">한국어기초사전 뜻 2 (신규)</span></div>
+          <div class="sense-def">어떤 대상의 자리에 다른 대상이 들어감.</div>
         </div>
       </div>
     </div>
-    <div class="modal-footer">
+    <div class="modal-footer" style="filter: blur(1px); opacity: 0.6;">
       <div class="footer-info">
-        <span style="color: #666; font-size: 13px;">⚠️ 반영 전 내용을 확인하고 필요 시 수정하세요.</span>
+        <div class="diff-summary-item"><div class="diff-dot changed"></div> 변경 1건</div>
+        <div class="diff-summary-item"><div class="diff-dot added"></div> 추가 1건</div>
       </div>
-      <button class="btn btn-ghost" onclick="showStep(1)">← 비교 화면으로</button>
-      <button class="btn btn-success" onclick="showStep(4)">이대로 반영하기</button>
+      <button class="btn btn-ghost">닫기</button>
+      <button class="btn btn-warning">변경사항 반영하기</button>
+    </div>
+    <!-- 컨펌 모달 오버레이 -->
+    <div class="confirm-overlay">
+      <div class="confirm-modal">
+        <div class="confirm-icon">⚠️</div>
+        <div class="confirm-title">한국어기초사전 데이터로 변경</div>
+        <div class="confirm-desc">
+          현재 어휘 상세 데이터를 한국어기초사전 데이터로 변경할까요?<br>
+          기존에 입력되어 있던 내용이 모두 대체되므로 신중히 선택해주세요.
+        </div>
+        <div class="confirm-actions">
+          <button class="confirm-btn confirm-btn-cancel" onclick="showStep(1)">취소</button>
+          <button class="confirm-btn confirm-btn-apply" onclick="showStep(4)">변경하기</button>
+        </div>
+      </div>
     </div>`;
 }
 
-// 스텝 4: 프리뷰에서 수동 수정 중
+// 스텝 4: 반영 완료
 function step4() {
-  return `
-    <div class="modal-header">
-      <h2>변경사항 프리뷰</h2>
-      <button class="modal-close">✕</button>
-    </div>
-    <div class="compare-body">
-      <div class="compare-panel left">
-        <div class="panel-header">
-          <div class="panel-label local"><span class="label-icon">📂</span> 현재 데이터</div>
-        </div>
-        <div class="field-group">
-          <div class="field-row"><span class="field-label">어휘</span><span class="field-value" style="font-weight:600;">대체</span></div>
-          <div class="field-row"><span class="field-label">어깨숫자</span><span class="field-value">2</span></div>
-          <div class="field-row"><span class="field-label">분류</span><span class="field-value">일반 어휘</span></div>
-        </div>
-        <div class="divider"></div>
-        <div class="sense-card">
-          <div class="sense-header"><span class="sense-num">뜻 1</span></div>
-          <div class="sense-def" style="text-decoration: line-through; color: #c0392b;">다른 많은 것을 다 빼고 요점만 말하면.</div>
-          <div class="sense-examples">
-            <div class="sense-example">예 이 소설은 <em>대체</em>로 사랑 이야기입니다.</div>
-          </div>
-        </div>
-        <div style="padding: 16px 0; text-align: center; color: #ccc; font-size: 13px;">
-          뜻 2 없음
-        </div>
-      </div>
-
-      <div class="arrow-divider">→</div>
-
-      <div class="preview-panel">
-        <div class="preview-header">
-          <div class="preview-label">
-            <span class="preview-icon">✏️</span> 반영될 데이터
-          </div>
-          <span class="preview-hint">클릭하여 직접 수정할 수 있습니다</span>
-        </div>
-        <div class="field-group">
-          <div class="field-row"><span class="field-label">어휘</span><span class="field-value" style="font-weight:600;">대체</span></div>
-          <div class="field-row"><span class="field-label">어깨숫자</span><span class="field-value">2</span></div>
-          <div class="field-row"><span class="field-label">분류</span><span class="field-value">일반 어휘</span></div>
-        </div>
-        <div class="divider"></div>
-
-        <div class="preview-sense-card from-changed">
-          <div class="sense-header">
-            <span class="sense-num">뜻 1</span>
-            <span class="diff-badge changed">변경</span>
-          </div>
-          <div class="preview-editable-def" contenteditable="true" style="border-color: #4a9eff; box-shadow: 0 0 0 3px rgba(74,158,255,0.12);">다른 것이나 다른 사람으로 대신함. 또는 그렇게 하는 것.</div>
-          <div class="sense-examples" style="margin-top: 8px;">
-            <div class="preview-editable-example" contenteditable="true">예 이 소설은 대체로 사랑 이야기입니다.</div>
-            <div class="preview-editable-example" contenteditable="true">예 수업 시간에 선생님의 대체 교사가 왔다.</div>
-          </div>
-          <div class="change-source">출처: <span class="src-changed">한국어기초사전 뜻 1</span> + 사용자 수정</div>
-        </div>
-
-        <div class="preview-sense-card from-added">
-          <div class="sense-header">
-            <span class="sense-num">뜻 2</span>
-            <span class="diff-badge added">추가</span>
-          </div>
-          <div class="preview-editable-def" contenteditable="true">어떤 대상의 자리에 다른 대상이 들어감.</div>
-          <div class="sense-examples" style="margin-top: 8px;">
-            <div class="preview-editable-example" contenteditable="true">예 석유를 대체할 에너지원을 찾아야 한다.</div>
-          </div>
-          <div class="change-source">출처: <span class="src-added">한국어기초사전 뜻 2 (신규)</span></div>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <div class="footer-info">
-        <span style="color: #666; font-size: 13px;">✏️ 뜻 1의 내용을 수동으로 수정했습니다.</span>
-      </div>
-      <button class="btn btn-ghost" onclick="showStep(1)">← 비교 화면으로</button>
-      <button class="btn btn-success" onclick="showStep(5)">이대로 반영하기</button>
-    </div>`;
-}
-
-// 스텝 5: 반영 완료
-function step5() {
   return `
     <div class="modal-header">
       <h2>한국어기초사전 데이터 비교</h2>
@@ -635,10 +485,10 @@ function step5() {
     <div class="compare-body">
       <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 60px; gap: 16px;">
         <div style="width:64px; height:64px; border-radius:50%; background:#e8f5e9; display:flex; align-items:center; justify-content:center; font-size:32px;">✓</div>
-        <div style="font-size:18px; font-weight:700; color:#333;">변경사항이 반영되었습니다</div>
+        <div style="font-size:18px; font-weight:700; color:#333;">한국어기초사전 데이터가 반영되었습니다</div>
         <div style="font-size:14px; color:#888; text-align:center; line-height:1.6;">
-          뜻 1이 업데이트되고, 뜻 2가 추가되었습니다.<br>
-          어휘 상세 페이지에서 최종 결과를 확인하세요.
+          어휘 상세 페이지의 입력 필드가 한국어기초사전 데이터로 변경되었습니다.<br>
+          변경된 내용을 확인한 후 페이지를 저장해주세요.
         </div>
         <div style="margin-top: 12px; display:flex; gap:12px;">
           <div style="padding:8px 16px; background:#f0faf0; border-radius:8px; font-size:13px; color:#2e7d32;">
@@ -658,7 +508,7 @@ function step5() {
 
 function showStep(n) {
   const modal = document.getElementById('modal');
-  const stepFns = { 1: step1, 2: step2, 3: step3, 4: step4, 5: step5 };
+  const stepFns = { 1: step1, 2: step2, 3: step3, 4: step4 };
   modal.innerHTML = stepFns[n]();
   modal.classList.add('fade-in');
   setTimeout(() => modal.classList.remove('fade-in'), 300);
