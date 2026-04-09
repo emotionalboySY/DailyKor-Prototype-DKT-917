@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>한국어기초사전 데이터 비교 - 프로토타입</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex; justify-content: center; align-items: center;
+    min-height: 100vh; color: #333;
+  }
+
+  /* 모달 */
+  .modal {
+    background: #fff; border-radius: 14px;
+    width: 1100px; max-height: 92vh;
+    display: flex; flex-direction: column;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.3);
+  }
+  .modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px 28px 16px; border-bottom: 1px solid #eee;
+  }
+  .modal-header h2 { font-size: 18px; font-weight: 700; }
+  .modal-close {
+    width: 32px; height: 32px; border: none; background: none;
+    font-size: 20px; color: #999; cursor: pointer; border-radius: 6px;
+  }
+  .modal-close:hover { background: #f5f5f5; }
+
+  /* 비교 영역 */
+  .compare-body {
+    flex: 1; overflow-y: auto; display: flex; gap: 0;
+  }
+  .compare-panel {
+    flex: 1; padding: 20px 24px; overflow-y: auto;
+  }
+  .compare-panel.left { border-right: 2px solid #e8ecf0; }
+
+  .panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .panel-label {
+    font-size: 14px; font-weight: 700; color: #555;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .panel-label .label-icon {
+    width: 22px; height: 22px; border-radius: 5px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 12px;
+  }
+  .panel-label.local .label-icon { background: #e8f5e9; }
+  .panel-label.api .label-icon { background: #e8f1fd; }
+
+  /* 검색바 (오른쪽 패널) */
+  .api-search {
+    display: flex; align-items: center; gap: 6px;
+  }
+  .api-search input {
+    width: 120px; height: 32px; border: 1.5px solid #d0d7e0;
+    border-radius: 6px; padding: 0 10px; font-size: 13px;
+    outline: none; transition: border 0.15s;
+  }
+  .api-search input:focus { border-color: #4a9eff; }
+  .api-search select {
+    height: 32px; border: 1.5px solid #d0d7e0;
+    border-radius: 6px; padding: 0 8px; font-size: 13px;
+    outline: none; background: #fff; cursor: pointer;
+  }
+  .api-search .search-btn-sm {
+    height: 32px; padding: 0 12px; border: none;
+    background: #4a9eff; color: #fff; border-radius: 6px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .api-search .search-btn-sm:hover { background: #3a8eef; }
+
+  /* 데이터 필드 */
+  .field-group { margin-bottom: 16px; }
+  .field-row {
+    display: flex; align-items: baseline; gap: 8px;
+    padding: 6px 0;
+  }
+  .field-label {
+    font-size: 12px; font-weight: 600; color: #888;
+    min-width: 60px; flex-shrink: 0;
+  }
+  .field-value { font-size: 14px; color: #333; line-height: 1.5; flex: 1; }
+
+  .divider {
+    height: 1px; background: #eee; margin: 12px 0;
+  }
+
+  /* 뜻/예문 카드 */
+  .sense-card {
+    background: #f9fafb; border-radius: 8px;
+    padding: 14px 16px; margin-bottom: 10px;
+    border: 1px solid #eef0f3;
+    transition: all 0.2s;
+  }
+  .sense-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .sense-num {
+    font-size: 13px; font-weight: 700; color: #4a9eff;
+  }
+  .sense-def {
+    font-size: 14px; color: #333; line-height: 1.6;
+  }
+  .sense-examples { margin-top: 8px; }
+  .sense-example {
+    font-size: 13px; color: #777; line-height: 1.5;
+    padding: 3px 0 3px 12px;
+    border-left: 2px solid #ddd;
+    margin-top: 4px;
+  }
+  .sense-example em { color: #4a9eff; font-style: normal; }
+
+  /* 차이점 하이라이트 */
+  .diff-changed {
+    background: #fffce5 !important; border-color: #f0e68c !important;
+  }
+  .diff-changed .sense-def { position: relative; }
+  .diff-badge {
+    display: inline-block; font-size: 10px; font-weight: 700;
+    padding: 1px 6px; border-radius: 4px; margin-left: 6px;
+    vertical-align: middle;
+  }
+  .diff-badge.changed { background: #fff3cd; color: #856404; }
+  .diff-badge.added { background: #d4edda; color: #155724; }
+  .diff-badge.removed { background: #f8d7da; color: #721c24; }
+
+  .diff-added {
+    background: #f0faf0 !important; border-color: #b7e4b7 !important;
+  }
+
+  /* 변경 사항 없음 */
+  .no-diff {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 24px; color: #999; font-size: 14px; gap: 6px;
+  }
+
+  /* 푸터 */
+  .modal-footer {
+    display: flex; justify-content: flex-end; align-items: center;
+    padding: 14px 28px; border-top: 1px solid #eee; gap: 8px;
+  }
+  .btn {
+    padding: 10px 20px; border-radius: 8px; font-size: 14px;
+    font-weight: 600; cursor: pointer; border: none; transition: all 0.15s;
+  }
+  .btn-ghost { background: #f0f0f0; color: #666; }
+  .btn-ghost:hover { background: #e0e0e0; }
+  .btn-primary { background: #4a9eff; color: #fff; }
+  .btn-primary:hover { background: #3a8eef; }
+  .btn-warning { background: #ff9800; color: #fff; }
+  .btn-warning:hover { background: #e88a00; }
+  .btn-success { background: #4caf50; color: #fff; }
+  .btn-success:hover { background: #43a047; }
+
+  .footer-info {
+    flex: 1; font-size: 13px; color: #999;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .diff-summary-item {
+    display: flex; align-items: center; gap: 4px;
+  }
+  .diff-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+  }
+  .diff-dot.changed { background: #ffc107; }
+  .diff-dot.added { background: #4caf50; }
+
+  /* 시나리오 탭 */
+  .scenario-tabs {
+    position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 4px;
+    background: rgba(0,0,0,0.7); padding: 4px; border-radius: 10px; z-index: 100;
+  }
+  .scenario-tab {
+    padding: 8px 16px; border: none; background: transparent;
+    color: rgba(255,255,255,0.6); font-size: 12px; font-weight: 500;
+    border-radius: 7px; cursor: pointer; white-space: nowrap; transition: all 0.15s;
+  }
+  .scenario-tab:hover { color: #fff; background: rgba(255,255,255,0.1); }
+  .scenario-tab.active { background: rgba(255,255,255,0.2); color: #fff; font-weight: 600; }
+  .scenario-tab .step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: rgba(255,255,255,0.2); font-size: 10px; margin-right: 4px;
+  }
+  .scenario-tab.active .step-num { background: #4a9eff; }
+
+  .fade-in { animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .loading-panel {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 60px 0; gap: 12px;
+  }
+  .spinner {
+    width: 28px; height: 28px; border: 3px solid #e0e0e0;
+    border-top-color: #4a9eff; border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-panel p { font-size: 13px; color: #999; }
+
+  /* 프리뷰 모드 */
+  .preview-panel {
+    flex: 1; padding: 20px 24px; overflow-y: auto;
+  }
+  .preview-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .preview-label {
+    font-size: 14px; font-weight: 700; color: #333;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .preview-label .preview-icon {
+    width: 24px; height: 24px; background: #e8f1fd; border-radius: 6px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 13px;
+  }
+  .preview-hint {
+    font-size: 12px; color: #999; font-weight: 400;
+  }
+
+  .preview-field {
+    margin-bottom: 14px;
+  }
+  .preview-field-label {
+    font-size: 12px; font-weight: 600; color: #888;
+    margin-bottom: 4px;
+  }
+  .preview-field-value {
+    font-size: 14px; color: #333; line-height: 1.5;
+    padding: 8px 12px; background: #f9fafb; border-radius: 6px;
+    border: 1px solid #eee;
+  }
+  .preview-field-value.editable {
+    background: #fff; border: 1.5px solid #4a9eff;
+    outline: none; cursor: text; min-height: 38px;
+  }
+  .preview-field-value.editable:focus {
+    box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.15);
+  }
+
+  .preview-sense-card {
+    background: #fff; border-radius: 8px;
+    padding: 14px 16px; margin-bottom: 10px;
+    border: 1.5px solid #eee;
+  }
+  .preview-sense-card.from-changed {
+    border-color: #ffc107; background: #fffef5;
+  }
+  .preview-sense-card.from-added {
+    border-color: #4caf50; background: #f5fdf5;
+  }
+  .preview-sense-card .change-source {
+    font-size: 11px; color: #888; margin-top: 6px;
+  }
+  .preview-sense-card .change-source span {
+    padding: 1px 6px; border-radius: 3px; font-weight: 600;
+  }
+  .preview-sense-card .change-source .src-changed { background: #fff3cd; color: #856404; }
+  .preview-sense-card .change-source .src-added { background: #d4edda; color: #155724; }
+
+  .preview-editable-def {
+    font-size: 14px; color: #333; line-height: 1.6;
+    padding: 6px 10px; border: 1.5px solid #e0e0e0; border-radius: 6px;
+    background: #fff; min-height: 32px; outline: none;
+    transition: border 0.15s;
+  }
+  .preview-editable-def:focus {
+    border-color: #4a9eff;
+    box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.12);
+  }
+  .preview-editable-example {
+    font-size: 13px; color: #555; line-height: 1.5;
+    padding: 4px 10px; border: 1.5px solid #e8e8e8; border-radius: 5px;
+    background: #fff; min-height: 28px; outline: none; margin-top: 4px;
+    transition: border 0.15s;
+  }
+  .preview-editable-example:focus {
+    border-color: #4a9eff;
+    box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.12);
+  }
+
+  .arrow-divider {
+    display: flex; align-items: center; justify-content: center;
+    width: 48px; flex-shrink: 0; color: #ccc; font-size: 24px;
+    border-left: 1px solid #eef0f3; border-right: 1px solid #eef0f3;
+    background: #f8f9fb;
+  }
+</style>
+</head>
+<body>
+
+<!-- 시나리오 탭 -->
+<div class="scenario-tabs">
+  <button class="scenario-tab active" onclick="showStep(1)">
+    <span class="step-num">1</span>비교 화면
+  </button>
+  <button class="scenario-tab" onclick="showStep(2)">
+    <span class="step-num">2</span>수동 검색
+  </button>
+  <button class="scenario-tab" onclick="showStep(3)">
+    <span class="step-num">3</span>변경 프리뷰
+  </button>
+  <button class="scenario-tab" onclick="showStep(4)">
+    <span class="step-num">4</span>프리뷰 수정
+  </button>
+  <button class="scenario-tab" onclick="showStep(5)">
+    <span class="step-num">5</span>반영 완료
+  </button>
+</div>
+
+<div class="modal" id="modal"></div>
+
+<script>
+function localPanel() {
+  return `
+    <div class="compare-panel left">
+      <div class="panel-header">
+        <div class="panel-label local"><span class="label-icon">📂</span> 어휘 사전 (현재)</div>
+      </div>
+      <div class="field-group">
+        <div class="field-row"><span class="field-label">어휘</span><span class="field-value" style="font-weight:600;">대체</span></div>
+        <div class="field-row"><span class="field-label">어깨숫자</span><span class="field-value">2</span></div>
+        <div class="field-row"><span class="field-label">분류</span><span class="field-value">일반 어휘</span></div>
+      </div>
+      <div class="divider"></div>
+      <div class="sense-card">
+        <div class="sense-header"><span class="sense-num">뜻 1</span></div>
+        <div class="sense-def">다른 많은 것을 다 빼고 요점만 말하면.</div>
+        <div class="sense-examples">
+          <div class="sense-example">예 이 소설은 <em>대체</em>로 사랑 이야기입니다.</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function apiPanelLoading() {
+  return `
+    <div class="compare-panel">
+      <div class="panel-header">
+        <div class="panel-label api"><span class="label-icon">📘</span> 한국어기초사전</div>
+      </div>
+      <div class="loading-panel">
+        <div class="spinner"></div>
+        <p>"대체²" 검색 중...</p>
+      </div>
+    </div>`;
+}
+
+// 스텝 1: 비교 화면 (차이점 있음)
+function step1() {
+  return `
+    <div class="modal-header">
+      <h2>한국어기초사전 데이터 비교</h2>
+      <button class="modal-close">✕</button>
+    </div>
+    <div class="compare-body">
+      ${localPanel()}
+      <div class="compare-panel">
+        <div class="panel-header">
+          <div class="panel-label api"><span class="label-icon">📘</span> 한국어기초사전</div>
+          <div class="api-search">
+            <input type="text" value="대체" readonly>
+            <select><option>대체² (명사)</option><option>대체¹ (부사)</option><option>대체³ (명사)</option></select>
+            <button class="search-btn-sm">검색</button>
+          </div>
+        </div>
+        <div class="field-group fade-in">
+          <div class="field-row"><span class="field-label">어휘</span><span class="field-value" style="font-weight:600;">대체</span></div>
+          <div class="field-row"><span class="field-label">어깨숫자</span><span class="field-value">2</span></div>
+          <div class="field-row"><span class="field-label">품사</span><span class="field-value">명사</span></div>
+        </div>
+        <div class="divider"></div>
+        <div class="sense-card diff-changed fade-in">
+          <div class="sense-header">
+            <span class="sense-num">뜻 1</span>
+            <span class="diff-badge changed">내용 변경</span>
+          </div>
+          <div class="sense-def">다른 것이나 다른 사람으로 대신함.</div>
+          <div class="sense-examples">
+            <div class="sense-example">예 이 소설은 <em>대체</em>로 사랑 이야기입니다.</div>
+            <div class="sense-example">예 수업 시간에 선생님의 <em>대체</em> 교사가 왔다.</div>
+          </div>
+        </div>
+        <div class="sense-card diff-added fade-in">
+          <div class="sense-header">
+            <span class="sense-num">뜻 2</span>
+            <span class="diff-badge added">신규</span>
+          </div>
+          <div class="sense-def">어떤 대상의 자리에 다른 대상이 들어감.</div>
+          <div class="sense-examples">
+            <div class="sense-example">예 석유를 <em>대체</em>할 에너지원을 찾아야 한다.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="footer-info">
+        <div class="diff-summary-item"><div class="diff-dot changed"></div> 변경 1건</div>
+        <div class="diff-summary-item"><div class="diff-dot added"></div> 추가 1건</div>
+      </div>
+      <button class="btn btn-ghost">닫기</button>
+      <button class="btn btn-warning" onclick="showStep(3)">변경사항 반영하기</button>
+    </div>`;
+}
+
+// 스텝 2: 수동 검색 (다른 어깨숫자 선택)
+function step2() {
+  return `
+    <div class="modal-header">
+      <h2>한국어기초사전 데이터 비교</h2>
+      <button class="modal-close">✕</button>
+    </div>
+    <div class="compare-body">
+      ${localPanel()}
+      <div class="compare-panel">
+        <div class="panel-header">
+          <div class="panel-label api"><span class="label-icon">📘</span> 한국어기초사전</div>
+          <div class="api-search">
+            <input type="text" value="대체">
+            <select style="border-color: #4a9eff;">
+              <option>대체¹ (부사)</option>
+              <option selected>대체² (명사)</option>
+              <option>대체³ (명사)</option>
+            </select>
+            <button class="search-btn-sm">검색</button>
+          </div>
+        </div>
+        <div class="field-group fade-in" style="background: #f0f7ff; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+          <div style="font-size: 13px; color: #4a9eff; font-weight: 600; margin-bottom: 8px;">📌 검색 결과 목록에서 비교할 항목을 선택하세요</div>
+          <div class="field-row"><span class="field-label">어휘</span><span class="field-value" style="font-weight:600;">대체</span></div>
+          <div class="field-row"><span class="field-label">어깨숫자</span><span class="field-value">1</span></div>
+          <div class="field-row"><span class="field-label">품사</span><span class="field-value">부사</span></div>
+        </div>
+        <div class="divider"></div>
+        <div class="sense-card fade-in">
+          <div class="sense-header"><span class="sense-num">뜻 1</span></div>
+          <div class="sense-def">'도대체'의 준말.</div>
+          <div class="sense-examples">
+            <div class="sense-example">예 <em>대체</em> 무슨 일이 있었던 거야?</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="footer-info">
+        <span style="color: #999; font-size: 13px;">어깨숫자가 다른 항목을 비교 중입니다.</span>
+      </div>
+      <button class="btn btn-ghost">닫기</button>
+      <button class="btn btn-warning" disabled style="opacity:0.5; cursor:default;">변경사항 반영하기</button>
+    </div>`;
+}
+
+// 스텝 3: 변경 프리뷰 (편집 가능)
+function step3() {
+  return `
+    <div class="modal-header">
+      <h2>변경사항 프리뷰</h2>
+      <button class="modal-close">✕</button>
+    </div>
+    <div class="compare-body">
+      <div class="compare-panel left">
+        <div class="panel-header">
+          <div class="panel-label local"><span class="label-icon">📂</span> 현재 데이터</div>
+        </div>
+        <div class="field-group">
+          <div class="field-row"><span class="field-label">어휘</span><span class="field-value" style="font-weight:600;">대체</span></div>
+          <div class="field-row"><span class="field-label">어깨숫자</span><span class="field-value">2</span></div>
+          <div class="field-row"><span class="field-label">분류</span><span class="field-value">일반 어휘</span></div>
+        </div>
+        <div class="divider"></div>
+        <div class="sense-card">
+          <div class="sense-header"><span class="sense-num">뜻 1</span></div>
+          <div class="sense-def" style="text-decoration: line-through; color: #c0392b;">다른 많은 것을 다 빼고 요점만 말하면.</div>
+          <div class="sense-examples">
+            <div class="sense-example">예 이 소설은 <em>대체</em>로 사랑 이야기입니다.</div>
+          </div>
+        </div>
+        <div style="padding: 16px 0; text-align: center; color: #ccc; font-size: 13px;">
+          뜻 2 없음
+        </div>
+      </div>
+
+      <div class="arrow-divider">→</div>
+
+      <div class="preview-panel">
+        <div class="preview-header">
+          <div class="preview-label">
+            <span class="preview-icon">✏️</span> 반영될 데이터
+          </div>
+          <span class="preview-hint">클릭하여 직접 수정할 수 있습니다</span>
+        </div>
+        <div class="field-group">
+          <div class="field-row"><span class="field-label">어휘</span><span class="field-value" style="font-weight:600;">대체</span></div>
+          <div class="field-row"><span class="field-label">어깨숫자</span><span class="field-value">2</span></div>
+          <div class="field-row"><span class="field-label">분류</span><span class="field-value">일반 어휘</span></div>
+        </div>
+        <div class="divider"></div>
+
+        <div class="preview-sense-card from-changed">
+          <div class="sense-header">
+            <span class="sense-num">뜻 1</span>
+            <span class="diff-badge changed">변경</span>
+          </div>
+          <div class="preview-editable-def" contenteditable="true">다른 것이나 다른 사람으로 대신함.</div>
+          <div class="sense-examples" style="margin-top: 8px;">
+            <div class="preview-editable-example" contenteditable="true">예 이 소설은 대체로 사랑 이야기입니다.</div>
+            <div class="preview-editable-example" contenteditable="true">예 수업 시간에 선생님의 대체 교사가 왔다.</div>
+          </div>
+          <div class="change-source">출처: <span class="src-changed">한국어기초사전 뜻 1</span></div>
+        </div>
+
+        <div class="preview-sense-card from-added">
+          <div class="sense-header">
+            <span class="sense-num">뜻 2</span>
+            <span class="diff-badge added">추가</span>
+          </div>
+          <div class="preview-editable-def" contenteditable="true">어떤 대상의 자리에 다른 대상이 들어감.</div>
+          <div class="sense-examples" style="margin-top: 8px;">
+            <div class="preview-editable-example" contenteditable="true">예 석유를 대체할 에너지원을 찾아야 한다.</div>
+          </div>
+          <div class="change-source">출처: <span class="src-added">한국어기초사전 뜻 2 (신규)</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="footer-info">
+        <span style="color: #666; font-size: 13px;">⚠️ 반영 전 내용을 확인하고 필요 시 수정하세요.</span>
+      </div>
+      <button class="btn btn-ghost" onclick="showStep(1)">← 비교 화면으로</button>
+      <button class="btn btn-success" onclick="showStep(4)">이대로 반영하기</button>
+    </div>`;
+}
+
+// 스텝 4: 프리뷰에서 수동 수정 중
+function step4() {
+  return `
+    <div class="modal-header">
+      <h2>변경사항 프리뷰</h2>
+      <button class="modal-close">✕</button>
+    </div>
+    <div class="compare-body">
+      <div class="compare-panel left">
+        <div class="panel-header">
+          <div class="panel-label local"><span class="label-icon">📂</span> 현재 데이터</div>
+        </div>
+        <div class="field-group">
+          <div class="field-row"><span class="field-label">어휘</span><span class="field-value" style="font-weight:600;">대체</span></div>
+          <div class="field-row"><span class="field-label">어깨숫자</span><span class="field-value">2</span></div>
+          <div class="field-row"><span class="field-label">분류</span><span class="field-value">일반 어휘</span></div>
+        </div>
+        <div class="divider"></div>
+        <div class="sense-card">
+          <div class="sense-header"><span class="sense-num">뜻 1</span></div>
+          <div class="sense-def" style="text-decoration: line-through; color: #c0392b;">다른 많은 것을 다 빼고 요점만 말하면.</div>
+          <div class="sense-examples">
+            <div class="sense-example">예 이 소설은 <em>대체</em>로 사랑 이야기입니다.</div>
+          </div>
+        </div>
+        <div style="padding: 16px 0; text-align: center; color: #ccc; font-size: 13px;">
+          뜻 2 없음
+        </div>
+      </div>
+
+      <div class="arrow-divider">→</div>
+
+      <div class="preview-panel">
+        <div class="preview-header">
+          <div class="preview-label">
+            <span class="preview-icon">✏️</span> 반영될 데이터
+          </div>
+          <span class="preview-hint">클릭하여 직접 수정할 수 있습니다</span>
+        </div>
+        <div class="field-group">
+          <div class="field-row"><span class="field-label">어휘</span><span class="field-value" style="font-weight:600;">대체</span></div>
+          <div class="field-row"><span class="field-label">어깨숫자</span><span class="field-value">2</span></div>
+          <div class="field-row"><span class="field-label">분류</span><span class="field-value">일반 어휘</span></div>
+        </div>
+        <div class="divider"></div>
+
+        <div class="preview-sense-card from-changed">
+          <div class="sense-header">
+            <span class="sense-num">뜻 1</span>
+            <span class="diff-badge changed">변경</span>
+          </div>
+          <div class="preview-editable-def" contenteditable="true" style="border-color: #4a9eff; box-shadow: 0 0 0 3px rgba(74,158,255,0.12);">다른 것이나 다른 사람으로 대신함. 또는 그렇게 하는 것.</div>
+          <div class="sense-examples" style="margin-top: 8px;">
+            <div class="preview-editable-example" contenteditable="true">예 이 소설은 대체로 사랑 이야기입니다.</div>
+            <div class="preview-editable-example" contenteditable="true">예 수업 시간에 선생님의 대체 교사가 왔다.</div>
+          </div>
+          <div class="change-source">출처: <span class="src-changed">한국어기초사전 뜻 1</span> + 사용자 수정</div>
+        </div>
+
+        <div class="preview-sense-card from-added">
+          <div class="sense-header">
+            <span class="sense-num">뜻 2</span>
+            <span class="diff-badge added">추가</span>
+          </div>
+          <div class="preview-editable-def" contenteditable="true">어떤 대상의 자리에 다른 대상이 들어감.</div>
+          <div class="sense-examples" style="margin-top: 8px;">
+            <div class="preview-editable-example" contenteditable="true">예 석유를 대체할 에너지원을 찾아야 한다.</div>
+          </div>
+          <div class="change-source">출처: <span class="src-added">한국어기초사전 뜻 2 (신규)</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="footer-info">
+        <span style="color: #666; font-size: 13px;">✏️ 뜻 1의 내용을 수동으로 수정했습니다.</span>
+      </div>
+      <button class="btn btn-ghost" onclick="showStep(1)">← 비교 화면으로</button>
+      <button class="btn btn-success" onclick="showStep(5)">이대로 반영하기</button>
+    </div>`;
+}
+
+// 스텝 5: 반영 완료
+function step5() {
+  return `
+    <div class="modal-header">
+      <h2>한국어기초사전 데이터 비교</h2>
+      <button class="modal-close">✕</button>
+    </div>
+    <div class="compare-body">
+      <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 60px; gap: 16px;">
+        <div style="width:64px; height:64px; border-radius:50%; background:#e8f5e9; display:flex; align-items:center; justify-content:center; font-size:32px;">✓</div>
+        <div style="font-size:18px; font-weight:700; color:#333;">변경사항이 반영되었습니다</div>
+        <div style="font-size:14px; color:#888; text-align:center; line-height:1.6;">
+          뜻 1이 업데이트되고, 뜻 2가 추가되었습니다.<br>
+          어휘 상세 페이지에서 최종 결과를 확인하세요.
+        </div>
+        <div style="margin-top: 12px; display:flex; gap:12px;">
+          <div style="padding:8px 16px; background:#f0faf0; border-radius:8px; font-size:13px; color:#2e7d32;">
+            <strong>변경</strong> 뜻 1 — 정의 및 예문 업데이트
+          </div>
+          <div style="padding:8px 16px; background:#f0faf0; border-radius:8px; font-size:13px; color:#2e7d32;">
+            <strong>추가</strong> 뜻 2 — 신규 등록
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="footer-info"></div>
+      <button class="btn btn-primary">닫기</button>
+    </div>`;
+}
+
+function showStep(n) {
+  const modal = document.getElementById('modal');
+  const stepFns = { 1: step1, 2: step2, 3: step3, 4: step4, 5: step5 };
+  modal.innerHTML = stepFns[n]();
+  modal.classList.add('fade-in');
+  setTimeout(() => modal.classList.remove('fade-in'), 300);
+
+  document.querySelectorAll('.scenario-tab').forEach((t, i) => {
+    t.classList.toggle('active', i === n - 1);
+  });
+}
+
+showStep(1);
+</script>
+</body>
+</html>
